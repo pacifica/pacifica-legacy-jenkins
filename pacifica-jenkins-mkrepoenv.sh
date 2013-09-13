@@ -28,7 +28,7 @@ then
 fi
 if [ "x${JENKINS_JOBS}" == "x" ]
 then
-	JENKINS_JOBS="go libbuhfsutil amalgam pacifica-core elasticsearch service-poke slurm gdb pacifica-builddeps pacifica-auth pacifica-web-basicauth pacifica-devel-brand pacifica-test-data pacifica-uploader pymongo pprof qt47"
+	JENKINS_JOBS="go libbuhfsutil amalgam pacifica-core elasticsearch service-poke slurm gdb pacifica-builddeps pacifica-auth pacifica-web-basicauth pacifica-devel-brand pacifica-test-data pacifica-uploader pymongo pprof qt47 pacifica-devel-vm"
 fi
 
 mkdir -p generated/envs

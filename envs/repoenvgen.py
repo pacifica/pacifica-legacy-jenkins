@@ -29,8 +29,13 @@ def main():
 	nolabel_list = {}
 	for (job, value) in config.items('nolabel'):
 		nolabel_list[job] = 1
+	norepo_list = {}
+	for (job, value) in config.items('norepo'):
+		norepo_list[job] = 1
 	first = True
 	for job in l:
+		if job in norepo_list:
+			continue
 		dist = parser.values.dist
 		branch = general_list[job]
 		if job in distmap_list and dist not in distmap_list[job]:
