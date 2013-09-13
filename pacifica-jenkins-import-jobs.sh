@@ -34,5 +34,11 @@ fi
 for jobname in ${JENKINS_JOBS};
 do
 	java -jar ${JENKINS_JAR} -s ${JENKINS_URL} delete-job $jobname ${JENKINS_OPTIONS}
-	java -jar ${JENKINS_JAR} -s ${JENKINS_URL} create-job $jobname ${JENKINS_OPTIONS} < ${JENKINS_CONFIG_PREFIX}/$jobname-config.xml
+	if [ -f ${JENKINS_CONFIG_PREFIX}/../generated/jobs/$jobname-config.xml ]
+	then
+		jobfile=${JENKINS_CONFIG_PREFIX}/../generated/jobs/$jobname-config.xml
+	else
+		jobfile=${JENKINS_CONFIG_PREFIX}/$jobname-config.xml
+	fi
+	java -jar ${JENKINS_JAR} -s ${JENKINS_URL} create-job $jobname ${JENKINS_OPTIONS} < $jobfile
 done

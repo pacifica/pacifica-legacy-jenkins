@@ -39,22 +39,25 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-FILE=gperftools-2.0-1.i386.rpm
-export REPODIR=/var/lib/jenkins/"$DIST"/
-if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
-if [ ! -f $FILE ]
-then
-    wget http://gperftools.googlecode.com/files/$FILE
-fi
 export CREATEREPOOPTS=
+export MOCKDISTPREFIX=
 if [ "$DIST" = 'epel-5-x86_64' ]; then export CREATEREPOOPTS='-s sha'; 
 fi
-mkdir -p "$REPODIR"
-cp -a $FILE "$REPODIR"
-createrepo $CREATEREPOOPTS "$REPODIR"
+if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
+rm -rf archive.zip archive
+wget ${JENKINS_URL}/job/elasticsearch-download/lastSuccessfulBuild/artifact/*zip*/archive.zip
+unzip archive.zip
+cd archive/elasticsearch-rpms
+rm -rf packages
+mkdir -p packages/"$DIST"/srpms
+mkdir -p packages/"$DIST"/bin
+MOCK=/usr/bin/mock
+$MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --buildsrpm --spec `pwd`/SPECS/elasticsearch.spec --sources "`pwd`"/SOURCES
+mv "/var/lib/mock/$MOCKDISTPREFIX$DIST/result/"*.src.rpm packages/"$DIST"/srpms/
+$MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --result `pwd`/packages/"$DIST"/bin `pwd`/packages/"$DIST"/srpms/*.src.rpm
 rm -rf repo
 mkdir -p repo
-cp -a $FILE repo/
+cp -a packages/"$DIST"/bin/* repo/
 createrepo $CREATEREPOOPTS repo
 </command>
     </hudson.tasks.Shell>
@@ -65,17 +68,10 @@ createrepo $CREATEREPOOPTS repo
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
-    <hudson.tasks.BuildTrigger>
-      <childProjects>amalgam</childProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-      </threshold>
-    </hudson.tasks.BuildTrigger>
   </publishers>
   <buildWrappers/>
   <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
     <runSequentially>false</runSequentially>
   </executionStrategy>
 </matrix-project>
+  

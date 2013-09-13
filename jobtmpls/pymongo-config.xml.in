@@ -25,8 +25,6 @@
       <name>DIST</name>
       <values>
         <string>epel-5-x86_64</string>
-        <string>epel-6-x86_64</string>
-        <string>fedora-18-x86_64</string>
       </values>
     </hudson.matrix.TextAxis>
     <hudson.matrix.LabelAxis>
@@ -39,22 +37,31 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-FILE=gperftools-2.0-1.i386.rpm
-export REPODIR=/var/lib/jenkins/"$DIST"/
-if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
-if [ ! -f $FILE ]
-then
-    wget http://gperftools.googlecode.com/files/$FILE
-fi
+PYMONGO_VERSION="2.1.1-1.el6"
 export CREATEREPOOPTS=
-if [ "$DIST" = 'epel-5-x86_64' ]; then export CREATEREPOOPTS='-s sha'; 
+export MOCKDISTPREFIX=
+export MOCK="/usr/bin/mock"
+export MOCKDIR="/var/lib/mock"
+export MOCKREPOENV=@REPOENV@
+if [ "$DIST" = "epel-5-x86_64" ]; then export CREATEREPOOPTS='-s sha'; fi
+if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
+wget -O pymongo-$PYMONGO_VERSION.src.rpm http://mirror.remotelan.net/epel/6/SRPMS/pymongo-$PYMONGO_VERSION.src.rpm
+rm -rf packages
+mkdir -p packages/"$DIST"/bin
+mkdir -p packages/"$DIST"/src
+pushd packages/"$DIST"/src
+rpm2cpio ../../../pymongo-$PYMONGO_VERSION.src.rpm | cpio -ivd
+popd
+sed -i 's/truncate --size=0 __init__.py/echo '' > __init__.py/' packages/"$DIST"/src/pymongo.spec
+$MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --buildsrpm --spec=`pwd`/packages/"$DIST"/src/pymongo.spec --sources=$PWD/packages/"$DIST"/src/
+cp $MOCKDIR/"$MOCKDISTPREFIX$DIST-$MOCKREPOENV"/result/*.src.rpm packages/"$DIST"/src/
+if ! $MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --define "python_sitearch /usr/lib64/python2.4/site-packages" --result `pwd`/packages/"$DIST"/bin packages/"$DIST"/src/*.src.rpm; then
+  more `pwd`/packages/"$DIST"/bin/*.log | cat
+  exit -1
 fi
-mkdir -p "$REPODIR"
-cp -a $FILE "$REPODIR"
-createrepo $CREATEREPOOPTS "$REPODIR"
 rm -rf repo
 mkdir -p repo
-cp -a $FILE repo/
+cp -a packages/"$MOCKDISTPREFIX$DIST-$MOCKREPOENV"/bin/* repo/
 createrepo $CREATEREPOOPTS repo
 </command>
     </hudson.tasks.Shell>
@@ -65,17 +72,10 @@ createrepo $CREATEREPOOPTS repo
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
-    <hudson.tasks.BuildTrigger>
-      <childProjects>amalgam</childProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-      </threshold>
-    </hudson.tasks.BuildTrigger>
   </publishers>
   <buildWrappers/>
   <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
     <runSequentially>false</runSequentially>
   </executionStrategy>
 </matrix-project>
+  

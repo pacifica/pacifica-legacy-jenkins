@@ -39,22 +39,28 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-FILE=gperftools-2.0-1.i386.rpm
-export REPODIR=/var/lib/jenkins/"$DIST"/
-if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
-if [ ! -f $FILE ]
-then
-    wget http://gperftools.googlecode.com/files/$FILE
-fi
+SLURM_VERSION="2.5.6"
 export CREATEREPOOPTS=
-if [ "$DIST" = 'epel-5-x86_64' ]; then export CREATEREPOOPTS='-s sha'; 
+export MOCKDISTPREFIX=
+export MOCK="/usr/bin/mock"
+export MOCKDIR="/var/lib/mock"
+export MOCKREPOENV=@REPOENV@
+if [ "$DIST" = "epel-5-x86_64" ]; then export CREATEREPOOPTS='-s sha'; fi
+if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
+wget -O slurm-$SLURM_VERSION.tar.bz2 http://www.schedmd.com/download/latest/slurm-$SLURM_VERSION.tar.bz2
+tar -xjf slurm-$SLURM_VERSION.tar.bz2 slurm-$SLURM_VERSION/slurm.spec
+rm -f *.src.rpm
+rm -rf packages
+mkdir -p packages/"$DIST"/bin
+$MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --buildsrpm --spec=`pwd`/slurm-$SLURM_VERSION/slurm.spec --sources=$PWD
+cp $MOCKDIR/"$MOCKDISTPREFIX$DIST-$MOCKREPOENV"/result/*.src.rpm .
+if ! $MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --result `pwd`/packages/"$DIST"/bin slurm-$SLURM_VERSION*.src.rpm; then
+  more $MOCKDIR/"$MOCKDISTPREFIX$DIST-$MOCKREPOENV"/result/*log | cat
+  exit -1
 fi
-mkdir -p "$REPODIR"
-cp -a $FILE "$REPODIR"
-createrepo $CREATEREPOOPTS "$REPODIR"
 rm -rf repo
 mkdir -p repo
-cp -a $FILE repo/
+cp -a packages/"$DIST"/bin/* repo/
 createrepo $CREATEREPOOPTS repo
 </command>
     </hudson.tasks.Shell>
@@ -65,17 +71,10 @@ createrepo $CREATEREPOOPTS repo
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
-    <hudson.tasks.BuildTrigger>
-      <childProjects>amalgam</childProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-      </threshold>
-    </hudson.tasks.BuildTrigger>
   </publishers>
   <buildWrappers/>
   <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
     <runSequentially>false</runSequentially>
   </executionStrategy>
 </matrix-project>
+  

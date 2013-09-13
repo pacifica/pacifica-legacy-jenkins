@@ -25,8 +25,6 @@
       <name>DIST</name>
       <values>
         <string>epel-5-x86_64</string>
-        <string>epel-6-x86_64</string>
-        <string>fedora-18-x86_64</string>
       </values>
     </hudson.matrix.TextAxis>
     <hudson.matrix.LabelAxis>
@@ -39,22 +37,32 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-FILE=gperftools-2.0-1.i386.rpm
-export REPODIR=/var/lib/jenkins/"$DIST"/
-if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
-if [ ! -f $FILE ]
+MOCK=/usr/bin/mock
+GDBVER=7.5.1-38
+if [ ! -f gdb-$GDBVER.fc18.src.rpm ]
 then
-    wget http://gperftools.googlecode.com/files/$FILE
+    wget http://dl.fedoraproject.org/pub/fedora/linux/updates/18/SRPMS/gdb-$GDBVER.fc18.src.rpm
 fi
 export CREATEREPOOPTS=
+export MOCKDISTPREFIX=
+export MOCKREPOENV=@REPOENV@
 if [ "$DIST" = 'epel-5-x86_64' ]; then export CREATEREPOOPTS='-s sha'; 
+if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
 fi
-mkdir -p "$REPODIR"
-cp -a $FILE "$REPODIR"
-createrepo $CREATEREPOOPTS "$REPODIR"
+rm -rf packages/"$DIST" || true
+mkdir -p packages/"$DIST"/srpms
+mkdir -p packages/"$DIST"/bin
+rm -rf src || true
+mkdir -p src
+cd src
+rpm2cpio ../gdb-$GDBVER.fc18.src.rpm | cpio -idv
+cd ..
+$MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --buildsrpm --spec src/gdb.spec --sources "`pwd`"/src
+mv "/var/lib/mock/$MOCKDISTPREFIX$DIST-$MOCKREPOENV/result/"*.src.rpm packages/"$DIST"/srpms/
+$MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --result `pwd`/packages/"$DIST"/bin `pwd`/packages/"$DIST"/srpms/*.src.rpm
 rm -rf repo
 mkdir -p repo
-cp -a $FILE repo/
+cp -a packages/"$DIST"/bin/* repo/
 createrepo $CREATEREPOOPTS repo
 </command>
     </hudson.tasks.Shell>
@@ -65,17 +73,10 @@ createrepo $CREATEREPOOPTS repo
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
-    <hudson.tasks.BuildTrigger>
-      <childProjects>amalgam</childProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-      </threshold>
-    </hudson.tasks.BuildTrigger>
   </publishers>
   <buildWrappers/>
   <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
     <runSequentially>false</runSequentially>
   </executionStrategy>
 </matrix-project>
+  

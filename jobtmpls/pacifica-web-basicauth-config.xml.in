@@ -13,12 +13,53 @@
       <priority>100</priority>
     </hudson.queueSorter.PrioritySorterJobProperty>
   </properties>
-  <scm class="hudson.scm.NullSCM"/>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@1.3.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <name></name>
+        <refspec></refspec>
+        <url>https://github.com/EMSL-MSC/pacifica-web-basicauth.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>origin/@BRANCH@</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <disableSubmodules>false</disableSubmodules>
+    <recursiveSubmodules>false</recursiveSubmodules>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <authorOrCommitter>false</authorOrCommitter>
+    <clean>false</clean>
+    <wipeOutWorkspace>false</wipeOutWorkspace>
+    <pruneBranches>false</pruneBranches>
+    <remotePoll>false</remotePoll>
+    <ignoreNotifyCommit>false</ignoreNotifyCommit>
+    <useShallowClone>false</useShallowClone>
+    <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
+    <gitTool>Default</gitTool>
+    <submoduleCfg class="list"/>
+    <relativeTargetDir></relativeTargetDir>
+    <reference></reference>
+    <excludedRegions></excludedRegions>
+    <excludedUsers></excludedUsers>
+    <gitConfigName></gitConfigName>
+    <gitConfigEmail></gitConfigEmail>
+    <skipTag>false</skipTag>
+    <includedRegions></includedRegions>
+    <scmName></scmName>
+  </scm>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-  <triggers class="vector"/>
+  <triggers class="vector">
+    <hudson.triggers.SCMTrigger>
+      <spec>5 * * * *</spec>
+      <ignorePostCommitHooks>false</ignorePostCommitHooks>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
   <concurrentBuild>false</concurrentBuild>
   <axes>
     <hudson.matrix.TextAxis>
@@ -39,22 +80,16 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-FILE=gperftools-2.0-1.i386.rpm
-export REPODIR=/var/lib/jenkins/"$DIST"/
-if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
-if [ ! -f $FILE ]
-then
-    wget http://gperftools.googlecode.com/files/$FILE
-fi
 export CREATEREPOOPTS=
-if [ "$DIST" = 'epel-5-x86_64' ]; then export CREATEREPOOPTS='-s sha'; 
-fi
-mkdir -p "$REPODIR"
-cp -a $FILE "$REPODIR"
-createrepo $CREATEREPOOPTS "$REPODIR"
+export MOCKDISTPREFIX=
+export REPODIR=/var/lib/jenkins/"$DIST"/
+export MOCKREPOENV=@REPOENV@
+if [ "$DIST" = "epel-5-x86_64" ]; then export CREATEREPOOPTS='-s sha'; fi
+if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
+make MOCKDIST="$MOCKDISTPREFIX$DIST-$MOCKREPOENV" mock
 rm -rf repo
 mkdir -p repo
-cp -a $FILE repo/
+cp -a packages/"$MOCKDISTPREFIX$DIST-$MOCKREPOENV"/bin/* repo/
 createrepo $CREATEREPOOPTS repo
 </command>
     </hudson.tasks.Shell>
@@ -65,17 +100,10 @@ createrepo $CREATEREPOOPTS repo
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
-    <hudson.tasks.BuildTrigger>
-      <childProjects>amalgam</childProjects>
-      <threshold>
-        <name>SUCCESS</name>
-        <ordinal>0</ordinal>
-        <color>BLUE</color>
-      </threshold>
-    </hudson.tasks.BuildTrigger>
   </publishers>
   <buildWrappers/>
   <executionStrategy class="hudson.matrix.DefaultMatrixExecutionStrategyImpl">
     <runSequentially>false</runSequentially>
   </executionStrategy>
 </matrix-project>
+  

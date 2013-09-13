@@ -1,0 +1,13 @@
+How this works:
+
+One jenkins job per SCM branch
+
+Repoenv - A set of jobs/yum repositories with specified branches. Can override one or more job-branches, sharing the rest of the jobs.
+Jobs - Jobs are targeted to be built in a single repoenv.
+
+The idea here is to let you create parallel job sets that share most things. For example, you create two env's:
+main and mdediting:
+
+and override the branches on some of the set of things:
+main is all trunk jobs
+mdediting uses the trunk jobs for everything except pacifica-core branch mdediting and amalgam branch mdediting-foo
