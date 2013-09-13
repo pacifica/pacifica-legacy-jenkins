@@ -50,6 +50,7 @@
     <includedRegions></includedRegions>
     <scmName></scmName>
   </scm>
+  <assignedNode>pacifica-vm</assignedNode>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
@@ -58,15 +59,15 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>
+      <command>#!/bin/bash -xe
 if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
 if [ "x$NOPROXY" != "x" ]
 then
-	cat examples/pacifica-devel-standalone.tdl > pacifica-devel-standalone.tdl.in
+	cat src/examples/pacifica-devel-standalone.tdl > pacifica-devel-standalone.tdl.in
 else
-	cat examples/pacifica-devel-standalone.tdl | sed 's^#export http_proxy=.*^export http_proxy="http://user:'`cat /var/lib/jenkins/squidpw | python -c "import urllib; import sys; print urllib.quote(sys.stdin.readline().strip(),safe='')"`'@192.168.123.1:3128"^' > pacifica-devel-standalone.tdl.in
+	cat src/examples/pacifica-devel-standalone.tdl | sed 's^#export http_proxy=.*^export http_proxy="http://user:'`cat /var/lib/jenkins/squidpw | python -c "import urllib; import sys; print urllib.quote(sys.stdin.readline().strip(),safe='')"`'@192.168.123.1:3128"^' > pacifica-devel-standalone.tdl.in
 fi
-sed -e "/^@YUMREPOS@/r /etc/pacifica/jenkins/pacifica-epel-5-x86_64-@REPOENV@.repo" -e "/@YUMREPOS@/d" pacifica-devel-standalone.tdl.in pacifica-devel-standalone.tdl
+sed -e "/^@YUMREPOS@/r /etc/pacifica/jenkins/pacifica-epel-5-x86_64-@REPOENV@.repo" -e "/@YUMREPOS@/d" pacifica-devel-standalone.tdl.in > pacifica-devel-standalone.tdl
 env
 sudo /usr/bin/oz-install -d3 -u -p -s `pwd`/pacifica-devel-standalone.dsk -t 10000 -x pacifica-devel-standalone.xml pacifica-devel-standalone.tdl
 virt-copy-out -a pacifica-devel-standalone.dsk /root/setup.log .
