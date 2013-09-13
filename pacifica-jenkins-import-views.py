@@ -12,15 +12,21 @@ file.close
 
 path = os.path.dirname(os.path.abspath(__file__))
 
-views = {}
-for i in os.listdir(path + "/views"):
-	file = open(path + "/views/%s" %(i), "r")
+def process_view(views, file):
 	x = xml.dom.minidom.parse(file)
 	file.close()
 	for j in x.firstChild.childNodes:
 		if j.nodeType == j.ELEMENT_NODE and j.nodeName == 'name':
 			views[j.firstChild.data] = x.firstChild
 
+views = {}
+for i in os.listdir(path + "/views"):
+	file = open(path + "/views/%s" %(i), "r")
+	process_view(views, file)
+
+for i in os.listdir(path + "/generated/views"):
+	file = open(path + "/generated/views/%s" %(i), "r")
+	process_view(views, file)
 
 to_delete = []
 
