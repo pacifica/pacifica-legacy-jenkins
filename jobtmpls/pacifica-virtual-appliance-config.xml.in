@@ -60,29 +60,31 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash -xe
+VERSION=0.0.1
 if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
 if [ "x$NOPROXY" != "x" ]
 then
-	cat src/examples/pacifica-devel-standalone.tdl > pacifica-devel-standalone.tdl.in
+	cat src/examples/pacifica-virtual-appliance.tdl > pacifica-virtual-appliance.tdl.in
 else
-	cat src/examples/pacifica-devel-standalone.tdl | sed 's^#export http_proxy=.*^export http_proxy="http://user:'`cat /var/lib/jenkins/squidpw | python -c "import urllib; import sys; print urllib.quote(sys.stdin.readline().strip(),safe='')"`'@192.168.123.1:3128"^' > pacifica-devel-standalone.tdl.in
+	cat src/examples/pacifica-virtual-appliance.tdl | sed 's^#export http_proxy=.*^export http_proxy="http://user:'`cat /var/lib/jenkins/squidpw | python -c "import urllib; import sys; print urllib.quote(sys.stdin.readline().strip(),safe='')"`'@192.168.123.1:3128"^' > pacifica-virtual-appliance.tdl.in
 fi
-sed -e "/^@YUMREPOS@/r /etc/pacifica/jenkins/pacifica-epel-5-x86_64-@REPOENV@.repo" -e "/@YUMREPOS@/d" pacifica-devel-standalone.tdl.in > pacifica-devel-standalone.tdl
+sed -e "/^@YUMREPOS@/r /etc/pacifica/jenkins/pacifica-epel-5-x86_64-@REPOENV@.repo" -e "/@YUMREPOS@/d" pacifica-virtual-appliance.tdl.in > pacifica-virtual-appliance.tdl
 env
-sudo /usr/bin/oz-install -d3 -u -p -s `pwd`/pacifica-devel-standalone.dsk -t 10000 -x pacifica-devel-standalone.xml pacifica-devel-standalone.tdl
-virt-copy-out -a pacifica-devel-standalone.dsk /root/setup.log .
-virt-copy-out -a pacifica-devel-standalone.dsk /root/setup.ok .
+sudo /usr/bin/oz-install -d3 -u -p -s `pwd`/pacifica-virtual-appliance-$VERSION.dsk -t 10000 -x pacifica-vertual-appliance.xml pacifica-virtual-appliance.tdl
+virt-copy-out -a pacifica-virtual-appliance-$VERSION.dsk /root/setup.log .
+virt-copy-out -a pacifica-virtual-appliance-$VERSION.dsk /root/setup.ok .
 if [ `cat setup.ok` -ne 0 ]; then
     cat setup.log
     exit 1
 fi
-qemu-img convert -c -f raw -O qcow2 pacifica-devel-standalone.dsk pacifica-devel-standalone.qcow2
+qemu-img convert -c -f raw -O qcow2 pacifica-virtual-appliance-$VERSION.dsk pacifica-virtual-appliance-$VERSION.qcow2
+qemu-img convert -f raw -O vmdk pacifica-virtual-appliance-$VERSION.dsk pacifica-virtual-appliance-$VERSION.vmdk
 </command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>pacifica-devel-standalone.qcow2</artifacts>
+      <artifacts>pacifica-virtual-appliance-*.qcow2, pacifica-virtual-appliance-*.vmdk</artifacts>
       <latestOnly>true</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
     </hudson.tasks.ArtifactArchiver>
