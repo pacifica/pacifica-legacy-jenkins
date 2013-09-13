@@ -42,7 +42,7 @@ createrepo $CREATEREPOOPTS "$REPOBASEDIR"/epel-5-x86_64/
 $MOCK -r atrpms-epel-5-x86_64 --clean
 rm -rf repo
 mkdir -p repo
-cp -a packages/"$MOCKDISTPREFIX$DIST-$MOCKREPOENV"/bin/* repo/
+cp -af /var/cache/mock/atrpms-epel-5-x86_64/yum_cache/atrpms-testing/packages/*.rpm repo/
 createrepo $CREATEREPOOPTS repo
 </command>
     </hudson.tasks.Shell>

@@ -26,6 +26,9 @@ def main():
 	nodist_list = {}
 	for (job, value) in config.items('nodist'):
 		nodist_list[job] = 1
+	nolabel_list = {}
+	for (job, value) in config.items('nolabel'):
+		nolabel_list[job] = 1
 	first = True
 	for job in l:
 		dist = parser.values.dist
@@ -39,8 +42,11 @@ def main():
 		distpart=''
 		if job not in nodist_list:
 			distpart="DIST=%s%%2c" %(dist)
+		labelpart=''
+		if job not in nolabel_list:
+			distpart="label=%s" %(parser.values.base)
 		print "name = Jenkins %s" %(job)
-		print "baseurl = %s/%s-%s/%slabel=pacifica/lastSuccessfulBuild/artifact/repo'" %(parser.values.jenkins, job, branch, distpart)
+		print "baseurl = %s/%s-%s/%s%s/lastSuccessfulBuild/artifact/repo" %(parser.values.jenkins, job, branch, distpart, labelpart)
 		print "enabled = 1"
 		print "protect = 0"
 		print "gpgcheck = 0"

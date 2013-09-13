@@ -61,7 +61,7 @@ if ! $MOCK -r "$MOCKDISTPREFIX$DIST-$MOCKREPOENV" --define "python_sitearch /usr
 fi
 rm -rf repo
 mkdir -p repo
-cp -a packages/"$MOCKDISTPREFIX$DIST-$MOCKREPOENV"/bin/* repo/
+cp -a packages/"$DIST"/bin/* repo/
 createrepo $CREATEREPOOPTS repo
 </command>
     </hudson.tasks.Shell>

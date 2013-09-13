@@ -39,7 +39,7 @@
   <builders>
     <hudson.tasks.Shell>
       <command>#!/bin/bash
-SLURM_VERSION="2.5.6"
+SLURM_VERSION="2.6.2"
 export CREATEREPOOPTS=
 export MOCKDISTPREFIX=
 export MOCK="/usr/bin/mock"

@@ -79,7 +79,7 @@
   </axes>
   <builders>
     <hudson.tasks.Shell>
-      <command>#!/bin/bash
+      <command>#!/bin/bash -xe
 export CREATEREPOOPTS=
 export MOCKDISTPREFIX=
 export MOCKREPOENV=@REPOENV@

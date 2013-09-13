@@ -37,7 +37,7 @@ mkdir -p generated/mock
 pushd $DIR/envs
 for DIST in ${JENKINS_DISTS};
 do
-	./repoenvgen.py -n ${JENKINS_REPOENV} -b pacifica -j "${JENKINS_URL}/jobs" -d $DIST > ../generated/envs/pacifica-$DIST-${JENKINS_REPOENV}.repo
+	./repoenvgen.py -n ${JENKINS_REPOENV} -b pacifica -j "${JENKINS_URL}/job" -d $DIST > ../generated/envs/pacifica-$DIST-${JENKINS_REPOENV}.repo
 	sed -e "/@REPOS@/r ../generated/envs/pacifica-$DIST-${JENKINS_REPOENV}.repo" -e "/@REPOS@/d" ../mock/$DIST.cfg.in | sed "s/@NAME@/pacifica-$DIST-${JENKINS_REPOENV}/g" > ../generated/mock/pacifica-$DIST-${JENKINS_REPOENV}.cfg
 done
 for jobname in ${JENKINS_JOBS};
