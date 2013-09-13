@@ -44,7 +44,7 @@ def main():
 			distpart="DIST=%s%%2c" %(dist)
 		labelpart=''
 		if job not in nolabel_list:
-			distpart="label=%s" %(parser.values.base)
+			labelpart="label=%s" %(parser.values.base)
 		print "name = Jenkins %s" %(job)
 		print "baseurl = %s/%s-%s/%s%s/lastSuccessfulBuild/artifact/repo" %(parser.values.jenkins, job, branch, distpart, labelpart)
 		print "enabled = 1"
