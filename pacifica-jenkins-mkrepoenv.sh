@@ -28,12 +28,15 @@ then
 fi
 if [ "x${JENKINS_JOBS}" == "x" ]
 then
-	JENKINS_JOBS="go libbuhfsutil amalgam pacifica-core elasticsearch service-poke slurm gdb pacifica-builddeps pacifica-auth pacifica-web-basicauth pacifica-devel-brand pacifica-test-data pacifica-uploader pymongo"
+	JENKINS_JOBS="go libbuhfsutil amalgam pacifica-core elasticsearch service-poke slurm gdb pacifica-builddeps pacifica-auth pacifica-web-basicauth pacifica-devel-brand pacifica-test-data pacifica-uploader pymongo pprof qt47"
 fi
 
 mkdir -p generated/envs
 mkdir -p generated/jobs
 mkdir -p generated/mock
+mkdir -p generated/views
+mkdir -p generated/tmp
+rm -rf generated/tmp/viewchunk.$$
 pushd $DIR/envs
 for DIST in ${JENKINS_DISTS};
 do
@@ -48,7 +51,9 @@ do
 	then
 		bprefix="-"
 	fi
+	echo "<string>$jobname$bprefix$branch</string>" >> ../generated/tmp/viewchunk.$$
 	sed "s/@BRANCH@/$branch/g;s/@REPOENV@/${JENKINS_REPOENV}/g" ../jobtmpls/$jobname-config.xml.in > ../generated/jobs/$jobname$bprefix$branch-config.xml
 done
 popd
+sed -e "/@JOBS@/r generated/tmp/viewchunk.$$" -e "/@JOBS@/d" viewtmpls/pacifica.xml.in | sed "s/@NAME@/pacifica-${JENKINS_REPOENV}/g" > generated/views/pacifica-$JENKINS_REPOENV.xml
 

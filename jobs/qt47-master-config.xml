@@ -33,7 +33,7 @@ export REPOBASEDIR=/var/lib/jenkins
 export CREATEREPOOPTS='-s sha'
 if [ -f /etc/pacifica/jenkins.sh ]; then . /etc/pacifica/jenkins.sh; fi
 $MOCK -r atrpms-epel-5-x86_64 --init
-$MOCK -r atrpms-epel-5-x86_64 --install qt47-webkit-devel sqlite-devel
+$MOCK -r atrpms-epel-5-x86_64 --install qt47-webkit-devel sqlite sqlite-devel
 mkdir -p "$REPOBASEDIR"/epel-5-x86_64/
 cp -af /var/cache/mock/atrpms-epel-5-x86_64/yum_cache/atrpms-testing/packages/*.rpm "$REPOBASEDIR"/epel-5-x86_64/
 rm -f "$REPOBASEDIR"/epel-5-x86_64/libgpg-error-*.rpm
